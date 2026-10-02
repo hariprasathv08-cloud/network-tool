@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Traffic Triage Tool | Educational SOC Analysis Engine</title>
+  <meta name="description" content="Local, browser-based Wireshark CSV network traffic triage tool for cybersecurity education and SOC investigation practice.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-wrapper">
+    
+    <!-- Left Sidebar Navigation -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-header">
+          <div class="sidebar-logo">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="sidebar-brand-title">
+            <h1>Network Traffic Triage Tool</h1>
+            <p>Analyse • Understand • Investigate</p>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav" role="tablist" aria-label="Main Navigation">
+          <button class="sidebar-nav-btn active" data-view="dashboard" id="nav-dashboard">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Dashboard
+          </button>
+          
+          <button class="sidebar-nav-btn" data-view="upload" id="nav-upload">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Upload CSV
+          </button>
+
+          <button class="sidebar-nav-btn" data-view="results" id="nav-results">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Analysis Results
+          </button>
+
+          <button class="sidebar-nav-btn" data-view="alerts" id="nav-alerts">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            Detection Alerts (<span id="sidebar-alert-count">0</span>)
+          </button>
+
+          <button class="sidebar-nav-btn" data-view="packets" id="nav-packets">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Packet Explorer
+          </button>
+
+          <button class="sidebar-nav-btn" data-view="settings" id="nav-settings">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+            Settings
+          </button>
+
+          <button class="sidebar-nav-btn" data-view="about" id="nav-about">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            About / How to Use
+          </button>
+        </nav>
+      </div>
+
+      <!-- Bottom Privacy Box -->
+      <div class="sidebar-footer-box">
+        <div class="sidebar-footer-box-title">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Local Analysis Only
+        </div>
+        <div>Your CSV file is processed in your browser. It is not uploaded, stored or sent anywhere.</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-area">
+      
+      <!-- Top Header -->
+      <header class="top-header">
+        <div>
+          <button class="btn btn-outline" id="btn-reset-analysis" style="padding: 5px 12px; font-size: 12px; color: var(--severity-high); border-color: rgba(239, 68, 68, 0.3);">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Reset Analysis
+          </button>
+        </div>
+
+        <div class="top-header-right">
+          <button class="theme-toggle-btn" id="btn-theme-toggle" aria-label="Toggle Theme">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Container -->
+      <div class="content-container">
+
+        <!-- VIEW 1: DASHBOARD VIEW -->
+        <div id="view-dashboard" class="view-panel active">
+          
+          <!-- Welcome Hero Banner Card -->
+          <div class="hero-card">
+            <div class="hero-left">
+              <div style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase;">Welcome to</div>
+              <h2 class="hero-title">Network Traffic Triage Tool</h2>
+              <p class="hero-subtitle">Upload a Wireshark CSV file and get a clear, easy-to-understand analysis of your network traffic. This tool helps you identify unusual patterns and activity worth investigating.</p>
+              <div class="hero-actions">
+                <button class="btn btn-primary" id="hero-btn-upload">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  Upload Wireshark CSV
+                </button>
+                <button class="btn btn-outline" id="hero-btn-how">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  How to Use
+                </button>
+              </div>
+            </div>
+
+            <div class="hero-graphic">
+              <!-- Inline SVG Laptop & Magnifying Graphic -->
+              <svg width="200" height="120" viewBox="0 0 200 120" fill="none">
+                <rect x="25" y="15" width="150" height="85" rx="8" fill="#1e293b"/>
+                <rect x="30" y="20" width="140" height="75" rx="4" fill="#0f172a"/>
+                <!-- Wave Graph -->
+                <path d="M 35 60 Q 50 20, 65 60 T 95 60 T 125 40 T 155 70 T 165 50" stroke="#38bdf8" stroke-width="3" fill="none"/>
+                <!-- Magnifying Glass -->
+                <circle cx="130" cy="45" r="22" stroke="#2563eb" stroke-width="5" fill="rgba(37, 99, 235, 0.1)"/>
+                <line x1="146" y1="61" x2="168" y2="83" stroke="#2563eb" stroke-width="6" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Analysis Overview Bar -->
+          <div class="overview-bar">
+            <div class="overview-title">
+              <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              Analysis Overview <span>Key statistics from your captured network traffic.</span>
+            </div>
+
+            <div class="file-status-pills">
+              <span class="pill-info" id="status-filename">File: No file loaded</span>
+              <span class="pill-info" id="status-packet-count">Packets loaded: 0</span>
+              <span class="pill-info" id="status-parsed-badge" style="background: var(--bg-card); color: var(--text-muted); border-color: var(--border-color);">Status: Waiting for CSV</span>
+            </div>
+          </div>
+
+          <!-- KPI Summary Cards Row -->
+          <div class="kpi-row">
+            
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper kpi-icon-purple">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <div class="kpi-data">
+                <div class="kpi-value-num" id="kpi-val-total">—</div>
+                <div class="kpi-label-text">Total Packets</div>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper kpi-icon-green">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              </div>
+              <div class="kpi-data">
+                <div class="kpi-value-num" id="kpi-val-sources">—</div>
+                <div class="kpi-label-text">Unique Source Hosts</div>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper kpi-icon-blue">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              </div>
+              <div class="kpi-data">
+                <div class="kpi-value-num" id="kpi-val-dests">—</div>
+                <div class="kpi-label-text">Unique Destination Hosts</div>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper kpi-icon-red">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+              </div>
+              <div class="kpi-data">
+                <div class="kpi-value-num" id="kpi-val-top-src" style="font-size: 14px;">—</div>
+                <div class="kpi-label-text">Most Active Source</div>
+                <div class="kpi-sub-text" id="kpi-sub-top-src">(0 packets)</div>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper kpi-icon-orange">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              </div>
+              <div class="kpi-data">
+                <div class="kpi-value-num" id="kpi-val-top-dst" style="font-size: 14px;">—</div>
+                <div class="kpi-label-text">Most Contacted Destination</div>
+                <div class="kpi-sub-text" id="kpi-sub-top-dst">(0 packets)</div>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper kpi-icon-cyan">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+              <div class="kpi-data">
+                <div class="kpi-value-num" id="kpi-val-top-proto">—</div>
+                <div class="kpi-label-text">Most Common Protocol</div>
+                <div class="kpi-sub-text" id="kpi-sub-top-proto">(0% of packets)</div>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper kpi-icon-purple">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7M4 7c0-2 1.5-3 3.5-3h9c2 0 3.5 1 3.5 3M4 7h16"/></svg>
+              </div>
+              <div class="kpi-data">
+                <div class="kpi-value-num" id="kpi-val-avg-len">—</div>
+                <div class="kpi-label-text">Average Packet Length</div>
+                <div class="kpi-sub-text">(bytes)</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 3-Column Card Layout -->
+          <div class="grid-3col">
+
+            <!-- Card 1: Top Source Hosts -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  Top Source Hosts
+                </div>
+                <span class="card-badge-top10">Top 10</span>
+              </div>
+
+              <table class="top-hosts-table">
+                <thead>
+                  <tr>
+                    <th style="width: 24px;">#</th>
+                    <th>Source IP</th>
+                    <th>Packets</th>
+                    <th>Percentage</th>
+                  </tr>
+                </thead>
+                <tbody id="table-top-sources">
+                  <tr><td colspan="4" class="empty-state">No source data available</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Card 2: Top Destination Hosts -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <svg width="18" height="18" fill="none" stroke="#059669" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M3.6 9h16.8M3.6 15h16.8"/></svg>
+                  Top Destination Hosts
+                </div>
+                <span class="card-badge-top10">Top 10</span>
+              </div>
+
+              <table class="top-hosts-table">
+                <thead>
+                  <tr>
+                    <th style="width: 24px;">#</th>
+                    <th>Destination IP</th>
+                    <th>Packets</th>
+                    <th>Percentage</th>
+                  </tr>
+                </thead>
+                <tbody id="table-top-dests">
+                  <tr><td colspan="4" class="empty-state">No destination data available</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Card 3: Protocol Distribution Donut Chart -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                  Protocol Distribution
+                </div>
+              </div>
+
+              <div class="donut-container">
+                <div class="donut-graphic" id="donut-svg-wrapper">
+                  <svg width="160" height="160" viewBox="0 0 160 160" id="donut-svg">
+                    <circle cx="80" cy="80" r="60" fill="none" stroke="#e2e8f0" stroke-width="24"/>
+                  </svg>
+                  <div class="donut-center-text">
+                    <div class="donut-center-val" id="donut-center-val">0</div>
+                    <div class="donut-center-lbl">Packets</div>
+                  </div>
+                </div>
+
+                <div class="donut-legend" id="donut-legend">
+                  <div class="empty-state" style="padding: 0; font-size: 11px;">No protocol data available</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Detection Alerts Table Section -->
+          <div class="alert-table-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Detection Alerts <span style="font-weight: 400; font-size: 12px; color: var(--text-muted);">These are unusual patterns worth investigating. They do not automatically mean malicious activity.</span>
+              </div>
+
+              <select id="filter-alert-severity" style="background: var(--bg-input); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: var(--radius-sm); font-size: 12px;">
+                <option value="ALL">All Severities</option>
+                <option value="High">High Severity</option>
+                <option value="Medium">Medium Severity</option>
+                <option value="Low">Low Severity</option>
+              </select>
+            </div>
+
+            <div style="overflow-x: auto;">
+              <table class="alert-table">
+                <thead>
+                  <tr>
+                    <th style="width: 30px;">#</th>
+                    <th style="width: 160px;">Rule Name</th>
+                    <th style="width: 90px;">Severity</th>
+                    <th style="width: 180px;">Evidence</th>
+                    <th style="width: 200px;">Why This Matters</th>
+                    <th>Possible Benign Explanation</th>
+                    <th>Suggested Investigation</th>
+                  </tr>
+                </thead>
+                <tbody id="alert-table-body">
+                  <tr><td colspan="7" class="empty-state">No traffic data available for analysis.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- VIEW 2: UPLOAD CSV VIEW -->
+        <div id="view-upload" class="view-panel" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">Upload Wireshark CSV Capture File</div>
+            </div>
+            <div class="dropzone-modal" id="dropzone-area">
+              <input type="file" id="csv-file-input-page" class="file-input-overlay" accept=".csv">
+              <div style="width: 48px; height: 48px; background: rgba(37, 99, 235, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              </div>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Select or Drag Wireshark CSV File</h3>
+              <p style="color: var(--text-muted); font-size: 13px;">File will be processed 100% locally in your browser memory.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 3: ANALYSIS RESULTS VIEW -->
+        <div id="view-results" class="view-panel" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">Detailed Analysis Results & Statistics</div>
+            </div>
+            <div id="results-summary-content">
+              <p class="empty-state">No traffic data loaded. Upload a CSV file or select a demo dataset above to view complete metrics.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 4: DEDICATED DETECTION ALERTS VIEW -->
+        <div id="view-alerts" class="view-panel" style="display: none;">
+          <div class="alert-table-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Detection Alerts Feed <span style="font-weight: 400; font-size: 12px; color: var(--text-muted);">Unusual patterns worth investigating based on configured rules.</span>
+              </div>
+
+              <select id="filter-alert-severity-dedicated" style="background: var(--bg-input); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: var(--radius-sm); font-size: 12px;">
+                <option value="ALL">All Severities</option>
+                <option value="High">High Severity</option>
+                <option value="Medium">Medium Severity</option>
+                <option value="Low">Low Severity</option>
+              </select>
+            </div>
+
+            <div style="overflow-x: auto;">
+              <table class="alert-table">
+                <thead>
+                  <tr>
+                    <th style="width: 30px;">#</th>
+                    <th style="width: 160px;">Rule Name</th>
+                    <th style="width: 90px;">Severity</th>
+                    <th style="width: 180px;">Evidence</th>
+                    <th style="width: 200px;">Why This Matters</th>
+                    <th>Possible Benign Explanation</th>
+                    <th>Suggested Investigation</th>
+                  </tr>
+                </thead>
+                <tbody id="alert-table-body-dedicated">
+                  <tr><td colspan="7" class="empty-state">No traffic data available for analysis.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 5: PACKET EXPLORER VIEW -->
+        <div id="view-packets" class="view-panel" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">Packet Explorer & Live Filters</div>
+              <input type="text" id="filter-search-packets" placeholder="Search IP or Info..." style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; width: 220px;">
+            </div>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                <thead>
+                  <tr style="background: var(--bg-input); border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                    <th style="padding: 8px;">No.</th>
+                    <th style="padding: 8px;">Time</th>
+                    <th style="padding: 8px;">Source</th>
+                    <th style="padding: 8px;">Destination</th>
+                    <th style="padding: 8px;">Protocol</th>
+                    <th style="padding: 8px;">Length</th>
+                    <th style="padding: 8px;">Info</th>
+                  </tr>
+                </thead>
+                <tbody id="packet-explorer-body">
+                  <tr><td colspan="7" class="empty-state">No traffic data loaded</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 6: SETTINGS VIEW -->
+        <div id="view-settings" class="view-panel" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">Detection Rule Threshold Settings</div>
+              <button class="btn btn-outline" id="btn-reset-defaults">Reset Defaults</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+              <div style="background: var(--bg-input); padding: 14px; border-radius: 6px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 4px;">Rule 1: High Packet Volume</label>
+                <input type="number" id="set-vol" value="50" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; width: 100px;">
+              </div>
+              <div style="background: var(--bg-input); padding: 14px; border-radius: 6px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 4px;">Rule 2: Host Scanning</label>
+                <input type="number" id="set-scan" value="10" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; width: 100px;">
+              </div>
+              <div style="background: var(--bg-input); padding: 14px; border-radius: 6px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 4px;">Rule 3: Port Scanning</label>
+                <input type="number" id="set-port" value="10" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; width: 100px;">
+              </div>
+              <div style="background: var(--bg-input); padding: 14px; border-radius: 6px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 4px;">Rule 4: High ICMP Activity</label>
+                <input type="number" id="set-icmp" value="30" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; width: 100px;">
+              </div>
+              <div style="background: var(--bg-input); padding: 14px; border-radius: 6px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 4px;">Rule 5: High DNS Activity</label>
+                <input type="number" id="set-dns" value="30" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; width: 100px;">
+              </div>
+              <div style="background: var(--bg-input); padding: 14px; border-radius: 6px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 4px;">Rule 6: Repeated Pair Comms</label>
+                <input type="number" id="set-pair" value="40" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; width: 100px;">
+              </div>
+              <div style="background: var(--bg-input); padding: 14px; border-radius: 6px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 4px;">Rule 7: TCP SYN Heavy Activity</label>
+                <input type="number" id="set-syn" value="20" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; width: 100px;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 7: ABOUT / HOW TO USE VIEW -->
+        <div id="view-about" class="view-panel" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">How to Think Like a SOC Analyst</div>
+            </div>
+            <div style="line-height: 1.7; font-size: 13px;">
+              <p><strong>Step 1:</strong> Observe unusual traffic patterns or unexpected spikes in packet volume.</p>
+              <p><strong>Step 2:</strong> Identify the source and destination IP addresses.</p>
+              <p><strong>Step 3:</strong> Establish whether the protocol and ports involved match normal operational baselines.</p>
+              <p><strong>Step 4:</strong> Check benign causes (software updates, backup jobs, cloud sync) before escalating.</p>
+              <blockquote style="margin-top: 14px; padding: 12px; background: var(--primary-light); border-left: 4px solid var(--primary); font-style: italic;">
+                "An anomaly is a starting point for investigation, not proof of compromise."
+              </blockquote>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
